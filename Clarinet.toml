@@ -1,0 +1,11 @@
+[project]
+name = "megapont-ape-club-nft"
+requirements = []
+costs_version = 1
+[contracts.megapont-ape-club-nft]
+path = "contracts/megapont-ape-club-nft.clar"
+depends_on = ["nft-trait"]
+
+[contracts.nft-trait]
+path = "contracts/nft-trait.clar"
+depends_on = []
