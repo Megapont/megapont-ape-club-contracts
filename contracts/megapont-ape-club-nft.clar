@@ -46,7 +46,7 @@
     (map-get? token-count account)))
 
 ;; Presale balance
-(define-private (presale-balance-of (account principal))
+(define-read-only (presale-balance-of (account principal))
   (default-to u0
     (map-get? presale-count account)))
 
@@ -58,7 +58,6 @@
 
 (define-public (claim-two)
   (begin
-    (try! (claim))
     (try! (claim))
     (try! (claim))
     (ok true)))
@@ -109,9 +108,6 @@
   ;; Make sure to replace Megapont-Ape-Club
   (ok (nft-get-owner? Megapont-Ape-Club token-id)))
 
-(define-read-only (get-mintpass-balance (account principal))
-  (ok (presale-balance-of account)))
-
 ;; SIP009: Get the last token ID
 (define-read-only (get-last-token-id)
   (ok (var-get last-id)))
@@ -134,8 +130,8 @@
           (begin
             (try! (stx-transfer? u24000000 tx-sender WALLET_1))
             (try! (stx-transfer? u22500000 tx-sender WALLET_2))
-            (try! (stx-transfer? u2500000 tx-sender WALLET_3))
-            (try! (stx-transfer? u1250000 tx-sender WALLET_4))
+            (try! (stx-transfer?  u2500000 tx-sender WALLET_3))
+            (try! (stx-transfer?  u1000000 tx-sender WALLET_4))
             (var-set last-id next-id)
             (map-set token-count
               new-owner
@@ -197,3 +193,4 @@
 ;; but could not get this ready in time.
 (map-set presale-count 'STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6 u5)
 (map-set presale-count 'ST3NBRSFKX28FQ2ZJ1MAKX58HKHSDGNV5N7R21XCP u5)
+(map-set presale-count 'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB u4)
