@@ -8,18 +8,14 @@
 
 ;; Storage
 (define-map token-count principal int)
-(define-map presale-count principal uint)
 
 ;; Define Constants
 (define-constant CONTRACT-OWNER tx-sender)
-(define-constant ERR-NOT-AUTHORIZED u401)
-(define-constant ERR-SALE-NOT-ACTIVE u500)
-(define-constant ERR-NO-MINTPASS-REMAINING u501)
-(define-constant ERR-MINTPASS-EXISTS u502)
-(define-constant ERR-SOLD-OUT u300)
+(define-constant ERR-NOT-AUTHORIZED (err u401))
+(define-constant ERR-SOLD-OUT (err u300))
+(define-constant ERR-METADATA-FROZEN (err u505))
+(define-constant ERR-MINT-ALREADY-SET (err u506))
 (define-constant APE-LIMIT u2500)
-(define-constant PRESALE-CAPACITY u504)
-(define-constant METADATA-FROZEN u505)
 
 ;; Withdraw wallets
 ;; Megapont 1
@@ -35,60 +31,19 @@
 (define-data-var last-id uint u0)
 (define-data-var mintpass-sale-active bool false)
 (define-data-var metadata-frozen bool false)
-(define-data-var sale-active bool false)
 (define-data-var base-uri (string-ascii 80) "ipfs://Qmad43sssgNbG9TpC6NfeiTi9X6f9vPYuzgW2S19BEi49m/{id}")
-(define-constant mint-price u50000000)
 (define-constant contract-uri "ipfs://QmSeXmYpkaxvH3xv8ikwDodJZjp9pqxooVvqLHq3Gvg6So")
+(define-map mint-address bool principal)
 
 ;; Token count for account
-(define-private (balance-of (account principal))
+(define-read-only (balance-of (account principal))
   (default-to 0
     (map-get? token-count account)))
-
-;; Presale balance
-(define-read-only (presale-balance-of (account principal))
-  (default-to u0
-    (map-get? presale-count account)))
-
-;; Claim a new NFT
-(define-public (claim)
-  (if (var-get mintpass-sale-active)
-    (mintpass-mint tx-sender)
-    (public-mint tx-sender)))
-
-(define-public (claim-two)
-  (begin
-    (try! (claim))
-    (try! (claim))
-    (ok true)))
-
-(define-public (claim-three)
-  (begin
-    (try! (claim))
-    (try! (claim))
-    (ok true)))
-
-(define-public (claim-four)
-  (begin
-    (try! (claim))
-    (try! (claim))
-    (try! (claim))
-    (try! (claim))
-    (ok true)))
-
-(define-public (claim-five)
-  (begin
-    (try! (claim))
-    (try! (claim))
-    (try! (claim))
-    (try! (claim))
-    (try! (claim))
-    (ok true)))
 
 ;; SIP009: Transfer token to a specified principal
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
   (begin
-    (asserts! (is-eq tx-sender sender) (err ERR-NOT-AUTHORIZED))
+    (asserts! (is-eq tx-sender sender) ERR-NOT-AUTHORIZED)
     (match (nft-transfer? Megapont-Ape-Club token-id sender recipient)
       success
         (let
@@ -119,78 +74,58 @@
 (define-read-only (get-contract-uri)
   (ok contract-uri))
 
-;; Internal - Mint new NFT
-(define-private (mint (new-owner principal))
+;; Mint new NFT
+;; can only be called from the Mint
+(define-public (mint (new-owner principal))
     (let ((next-id (+ u1 (var-get last-id))))
-      (asserts! (< (var-get last-id) APE-LIMIT) (err ERR-SOLD-OUT))
+      (asserts! (called-from-mint) ERR-NOT-AUTHORIZED)
+      (asserts! (< (var-get last-id) APE-LIMIT) ERR-SOLD-OUT)
       (match (nft-mint? Megapont-Ape-Club next-id new-owner)
         success
         (let
         ((current-balance (balance-of new-owner)))
           (begin
-            (try! (stx-transfer? u24000000 tx-sender WALLET_1))
+            (try! (stx-transfer? u23750000 tx-sender WALLET_1))
             (try! (stx-transfer? u22500000 tx-sender WALLET_2))
             (try! (stx-transfer?  u2500000 tx-sender WALLET_3))
-            (try! (stx-transfer?  u1000000 tx-sender WALLET_4))
+            (try! (stx-transfer?  u1250000 tx-sender WALLET_4))
             (var-set last-id next-id)
             (map-set token-count
               new-owner
               (+ 1 current-balance)
             )
             (ok true)))
-        error (err error))))
+        error (err (* error u10000)))))
 
-;; Internal - Mint NFT using Mintpass mechanism
-(define-private (mintpass-mint (new-owner principal))
-  (let ((presale-balance (presale-balance-of new-owner)))
-    (asserts! (> presale-balance u0) (err ERR-NO-MINTPASS-REMAINING))
-    (map-set presale-count
-              new-owner
-              (- presale-balance u1))
-    (mint new-owner)))
-
-;; Internal - Mint public sale NFT
-(define-private (public-mint (new-owner principal))
-  (begin
-    (asserts! (var-get sale-active) (err ERR-SALE-NOT-ACTIVE))
-    (mint new-owner)))
+;; update meta data
 
 ;; Set base uri
 (define-public (set-base-uri (new-base-uri (string-ascii 80)))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) (err ERR-NOT-AUTHORIZED))
-    (asserts! (not (var-get metadata-frozen)) (err METADATA-FROZEN))
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (not (var-get metadata-frozen)) ERR-METADATA-FROZEN)
     (var-set base-uri new-base-uri)
     (ok true)))
-
-;; Set public sale flag
-(define-public (flip-mintpass-sale)
-  (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER)  (err ERR-NOT-AUTHORIZED))
-    ;; Disable the Public sale
-    (var-set sale-active false)
-    (var-set mintpass-sale-active (not (var-get mintpass-sale-active)))
-    (ok (var-get mintpass-sale-active))))
-
-;; Set public sale flag
-(define-public (flip-sale)
-  (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) (err ERR-NOT-AUTHORIZED))
-    ;; Disable the Mintpass sale
-    (var-set mintpass-sale-active false)
-    (var-set sale-active (not (var-get sale-active)))
-    (ok (var-get sale-active))))
 
 ;; Freeze metadata
 (define-public (freeze-metadata)  
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) (err ERR-NOT-AUTHORIZED))
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (var-set metadata-frozen true)
     (ok true)))
 
-;; We want to add 500 addresses here on deploy...
-;; This exists with safety checks in add-mintpass as we were going to do this for whitelist
-;; but could not get this ready in time.
-(map-set presale-count 'STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6 u5)
-(map-set presale-count 'ST3NBRSFKX28FQ2ZJ1MAKX58HKHSDGNV5N7R21XCP u5)
-(map-set presale-count 'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB u4)
+;; Manage the Mint
+
+(define-private (called-from-mint)
+  (let ((the-mint
+          (unwrap! (map-get? mint-address true)
+                    false)))
+    (is-eq contract-caller the-mint)))
+
+;; can only be called once
+(define-public (set-mint-address)
+  (let ((the-mint (map-get? mint-address true)))
+    (asserts! (and (is-none the-mint)
+              (map-insert mint-address true tx-sender)) 
+                ERR-MINT-ALREADY-SET)
+    (ok tx-sender)))

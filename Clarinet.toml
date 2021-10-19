@@ -2,9 +2,14 @@
 name = "megapont-ape-club-nft"
 requirements = []
 costs_version = 1
+
 [contracts.megapont-ape-club-nft]
 path = "contracts/megapont-ape-club-nft.clar"
 depends_on = ["nft-trait"]
+
+[contracts.megapont-ape-club-mint]
+path = "contracts/megapont-ape-club-mint.clar"
+depends_on = ["megapont-ape-club-nft"]
 
 [contracts.nft-trait]
 path = "contracts/nft-trait.clar"
