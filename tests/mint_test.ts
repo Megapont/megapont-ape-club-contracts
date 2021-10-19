@@ -115,7 +115,6 @@ Clarinet.test({
   },
 });
 
-
 Clarinet.test({
   name: "Ensure that users can't mint more NFTs than they own mintpasses",
   async fn(chain: Chain, accounts: Map<string, Account>) {
@@ -127,5 +126,40 @@ Clarinet.test({
     ]);
     block.receipts[0].result.expectOk().expectBool(true);
     block.receipts[1].result.expectErr().expectUint(501);
+  },
+});
+
+Clarinet.test({
+  name: "Ensure that users can't mint via NFT contract",
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    let deployer = accounts.get("deployer")!;
+    let wallet_5 = accounts.get("wallet_5")!;
+    let block = chain.mineBlock([
+      Tx.contractCall(
+        "megapont-ape-club-nft",
+        "mint",
+        [types.principal(wallet_5.address)],
+        wallet_5.address
+      ),
+    ]);
+    block.receipts[0].result.expectErr().expectUint(401);
+  },
+});
+
+Clarinet.test({
+  name: "Ensure that users can't mint more than 2500 NFTs",
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    let deployer = accounts.get("deployer")!;
+    let wallet_5 = accounts.get("wallet_5")!;
+    let block = chain.mineBlock([flipSale(deployer.address)]);
+    block.receipts[0].result.expectOk();
+
+    for (let i = 0; i < 2500; i++) {
+      block = chain.mineBlock([claim(wallet_5.address)]);
+      block.receipts[0].result.expectOk();
+    }
+
+    block = chain.mineBlock([claim(wallet_5.address)]);
+    block.receipts[0].result.expectErr().expectUint(300);
   },
 });
