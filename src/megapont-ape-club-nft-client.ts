@@ -46,7 +46,7 @@ export function transfer(
 export function getBalance(chain: Chain, user: Account) {
   return chain.callReadOnlyFn(
     "megapont-ape-club-nft",
-    "balance-of",
+    "get-balance",
     [types.principal(user.address)],
     user.address
   );
@@ -55,7 +55,7 @@ export function getBalance(chain: Chain, user: Account) {
 export function getMintpassBalance(chain: Chain, user: Account) {
   return chain.callReadOnlyFn(
     "megapont-ape-club-mint",
-    "presale-balance-of",
+    "get-presale-balance",
     [types.principal(user.address)],
     user.address
   );

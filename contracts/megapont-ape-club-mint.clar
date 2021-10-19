@@ -14,7 +14,7 @@
 (define-constant mint-price u50000000)
 
 ;; Presale balance
-(define-read-only (presale-balance-of (account principal))
+(define-read-only (get-presale-balance (account principal))
   (default-to u0
     (map-get? presale-count account)))
 
@@ -56,7 +56,7 @@
 
 ;; Internal - Mint NFT using Mintpass mechanism
 (define-private (mintpass-mint (new-owner principal))
-  (let ((presale-balance (presale-balance-of new-owner)))
+  (let ((presale-balance (get-presale-balance new-owner)))
     (asserts! (> presale-balance u0) (err ERR-NO-MINTPASS-REMAINING))
     (map-set presale-count
               new-owner

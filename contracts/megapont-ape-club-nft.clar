@@ -7,7 +7,7 @@
 (define-non-fungible-token Megapont-Ape-Club uint)
 
 ;; Storage
-(define-map token-count principal int)
+(define-map token-count principal uint)
 
 ;; Define Constants
 (define-constant CONTRACT-OWNER tx-sender)
@@ -36,8 +36,8 @@
 (define-map mint-address bool principal)
 
 ;; Token count for account
-(define-read-only (balance-of (account principal))
-  (default-to 0
+(define-read-only (get-balance (account principal))
+  (default-to u0
     (map-get? token-count account)))
 
 ;; SIP009: Transfer token to a specified principal
@@ -47,14 +47,14 @@
     (match (nft-transfer? Megapont-Ape-Club token-id sender recipient)
       success
         (let
-          ((sender-balance (balance-of sender))
-          (recipient-balance (balance-of recipient)))
+          ((sender-balance (get-balance sender))
+          (recipient-balance (get-balance recipient)))
             (map-set token-count
                   sender
-                  (- sender-balance 1))
+                  (- sender-balance u1))
             (map-set token-count
                   recipient
-                  (+ 1 recipient-balance))
+                  (+ recipient-balance u1))
             (ok success))
       error (err error))))
 
@@ -83,7 +83,7 @@
       (match (nft-mint? Megapont-Ape-Club next-id new-owner)
         success
         (let
-        ((current-balance (balance-of new-owner)))
+        ((current-balance (get-balance new-owner)))
           (begin
             (try! (stx-transfer? u23750000 tx-sender WALLET_1))
             (try! (stx-transfer? u22500000 tx-sender WALLET_2))
@@ -92,7 +92,7 @@
             (var-set last-id next-id)
             (map-set token-count
               new-owner
-              (+ 1 current-balance)
+              (+ current-balance u1)
             )
             (ok true)))
         error (err (* error u10000)))))

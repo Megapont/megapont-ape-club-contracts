@@ -36,7 +36,7 @@ Clarinet.test({
     assertEquals(price, 50_000_000);
 
     let balance = getBalance(chain, wallet_5);
-    balance.result.expectInt(1);
+    balance.result.expectUint(1);
 
     // one mintpass has been used
     mintpasses = getMintpassBalance(chain, wallet_5);
@@ -52,7 +52,7 @@ Clarinet.test({
     assertEquals(price, 250_000_000);
 
     balance = getBalance(chain, wallet_5);
-    balance.result.expectInt(6);
+    balance.result.expectUint(6);
 
     // no mint passes have been used
     mintpasses = getMintpassBalance(chain, wallet_5);
