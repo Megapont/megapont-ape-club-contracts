@@ -13,6 +13,6 @@ Clarinet.test({
     assertEquals(block.receipts.length, 2);
     assertEquals(block.height, 2);
     block.receipts[0].result.expectOk().expectUint(0);
-    block.receipts[1].result.expectOk().expectSome().expectAscii('ipfs://Qmad43sssgNbG9TpC6NfeiTi9X6f9vPYuzgW2S19BEi49m/1');
+    block.receipts[1].result.expectOk().expectSome().expectAscii('ipfs://Qmad43sssgNbG9TpC6NfeiTi9X6f9vPYuzgW2S19BEi49m/{id}');
   },
 });
