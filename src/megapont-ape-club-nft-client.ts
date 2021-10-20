@@ -52,6 +52,38 @@ export function getBalance(chain: Chain, user: Account) {
   );
 }
 
+export function list(
+  id: number,
+  price: number,
+  commission: string,
+  user: Account
+) {
+  return Tx.contractCall(
+    "megapont-ape-club-nft",
+    "list-in-stx",
+    [types.uint(id), types.uint(price), types.principal(commission)],
+    user.address
+  );
+}
+
+export function unlist(id: number, user: Account) {
+  return Tx.contractCall(
+    "megapont-ape-club-nft",
+    "unlist-in-stx",
+    [types.uint(id)],
+    user.address
+  );
+}
+
+export function buy(id: number, commission: string, user: Account) {
+  return Tx.contractCall(
+    "megapont-ape-club-nft",
+    "buy-in-stx",
+    [types.uint(id), types.principal(commission)],
+    user.address
+  );
+}
+
 export function getMintpassBalance(chain: Chain, user: Account) {
   return chain.callReadOnlyFn(
     "megapont-ape-club-mint",

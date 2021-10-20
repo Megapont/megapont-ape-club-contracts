@@ -2,19 +2,24 @@
 ;;live (impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
 ;;test (impl-trait 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.nft-trait.nft-trait)
 (impl-trait .nft-trait.nft-trait)
+(use-trait commission-trait .commission-trait.commission)
 
 ;; define a new NFT. Make sure to replace Megapont-Ape-Club
 (define-non-fungible-token Megapont-Ape-Club uint)
 
 ;; Storage
 (define-map token-count principal uint)
+(define-map market uint {price: uint, commission: principal})
 
 ;; Define Constants
 (define-constant CONTRACT-OWNER tx-sender)
-(define-constant ERR-NOT-AUTHORIZED (err u401))
 (define-constant ERR-SOLD-OUT (err u300))
+(define-constant ERR-WRONG-COMMISSION (err u301))
+(define-constant ERR-NOT-AUTHORIZED (err u401))
+(define-constant ERR-NOT-FOUND (err u404))
 (define-constant ERR-METADATA-FROZEN (err u505))
 (define-constant ERR-MINT-ALREADY-SET (err u506))
+(define-constant ERR-LISTING (err u507))
 (define-constant APE-LIMIT u2500)
 
 ;; Withdraw wallets
@@ -40,35 +45,39 @@
   (default-to u0
     (map-get? token-count account)))
 
+(define-private (trnsfr (id uint) (sender principal) (recipient principal))
+  (match (nft-transfer? Megapont-Ape-Club id sender recipient)
+        success
+          (let
+            ((sender-balance (get-balance sender))
+            (recipient-balance (get-balance recipient)))
+              (map-set token-count
+                    sender
+                    (- sender-balance u1))
+              (map-set token-count
+                    recipient
+                    (+ recipient-balance u1))
+              (ok success))
+        error (err error)))
+
 ;; SIP009: Transfer token to a specified principal
-(define-public (transfer (token-id uint) (sender principal) (recipient principal))
+(define-public (transfer (id uint) (sender principal) (recipient principal))
   (begin
     (asserts! (is-eq tx-sender sender) ERR-NOT-AUTHORIZED)
-    (match (nft-transfer? Megapont-Ape-Club token-id sender recipient)
-      success
-        (let
-          ((sender-balance (get-balance sender))
-          (recipient-balance (get-balance recipient)))
-            (map-set token-count
-                  sender
-                  (- sender-balance u1))
-            (map-set token-count
-                  recipient
-                  (+ recipient-balance u1))
-            (ok success))
-      error (err error))))
+    (asserts! (is-none (map-get? market id)) ERR-LISTING)
+    (trnsfr id sender recipient)))
 
 ;; SIP009: Get the owner of the specified token ID
-(define-read-only (get-owner (token-id uint))
+(define-read-only (get-owner (id uint))
   ;; Make sure to replace Megapont-Ape-Club
-  (ok (nft-get-owner? Megapont-Ape-Club token-id)))
+  (ok (nft-get-owner? Megapont-Ape-Club id)))
 
 ;; SIP009: Get the last token ID
 (define-read-only (get-last-token-id)
   (ok (var-get last-id)))
 
 ;; SIP009: Get the token URI. You can set it to any other URI
-(define-read-only (get-token-uri (token-id uint))
+(define-read-only (get-token-uri (id uint))
   (ok (some (var-get base-uri))))
 
 (define-read-only (get-contract-uri)
@@ -96,6 +105,36 @@
             )
             (ok true)))
         error (err (* error u10000)))))
+
+(define-private (is-sender-owner (id uint))
+  (let ((owner (unwrap! (nft-get-owner? Megapont-Ape-Club id) false)))
+    (or (is-eq tx-sender owner) (is-eq contract-caller owner))))
+
+(define-public (list-in-stx (id uint) (price uint) (comm <commission-trait>))
+  (let ((listing  {price: price, commission: (contract-of comm)}))
+    (asserts! (is-sender-owner id) ERR-NOT-AUTHORIZED)
+    (map-set market id listing)
+    (print (merge listing {a: "list-in-stx", id: id}))
+    (ok true)))
+
+(define-public (unlist-in-stx (id uint))
+  (begin
+    (asserts! (is-sender-owner id) ERR-NOT-AUTHORIZED)
+    (map-delete market id)
+    (print {a: "unlist-in-stx", id: id})
+    (ok true)))
+
+(define-public (buy-in-stx (id uint) (comm <commission-trait>))
+  (let ((owner (unwrap! (nft-get-owner? Megapont-Ape-Club id) ERR-NOT-FOUND))
+      (listing (unwrap! (map-get? market id) ERR-LISTING))
+      (price (get price listing)))
+    (asserts! (is-eq (contract-of comm) (get commission listing)) ERR-WRONG-COMMISSION)
+    (try! (stx-transfer? price tx-sender owner))
+    (try! (contract-call? comm pay id price))
+    (try! (trnsfr id owner tx-sender))
+    (map-delete market id)
+    (print {a: "buy-in-stx", id: id})
+    (ok true)))
 
 ;; update meta data
 
