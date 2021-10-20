@@ -5,7 +5,7 @@ costs_version = 1
 
 [contracts.megapont-ape-club-nft]
 path = "contracts/megapont-ape-club-nft.clar"
-depends_on = ["nft-trait"]
+depends_on = ["nft-trait", "commission-trait"]
 
 [contracts.megapont-ape-club-mint]
 path = "contracts/megapont-ape-club-mint.clar"
@@ -13,4 +13,16 @@ depends_on = ["megapont-ape-club-nft"]
 
 [contracts.nft-trait]
 path = "contracts/nft-trait.clar"
+depends_on = []
+
+[contracts.commission-trait]
+path = "contracts/commission-trait.clar"
+depends_on = []
+
+[contracts.commission-nop]
+path = "contracts/commission-nop.clar"
+depends_on = []
+
+[contracts.commission-fixed]
+path = "contracts/commission-fixed.clar"
 depends_on = []

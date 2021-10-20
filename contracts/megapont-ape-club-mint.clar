@@ -3,15 +3,15 @@
 (define-map presale-count principal uint)
 
 ;; Define Constants
+(define-constant mint-price u50000000)
 (define-constant CONTRACT-OWNER tx-sender)
-(define-constant ERR-NOT-AUTHORIZED u401)
-(define-constant ERR-SALE-NOT-ACTIVE u500)
-(define-constant ERR-NO-MINTPASS-REMAINING u501)
+(define-constant ERR-NOT-AUTHORIZED (err u401))
+(define-constant ERR-SALE-NOT-ACTIVE (err u500))
+(define-constant ERR-NO-MINTPASS-REMAINING (err u501))
 
 ;; Define Variables
 (define-data-var mintpass-sale-active bool false)
 (define-data-var sale-active bool false)
-(define-constant mint-price u50000000)
 
 ;; Presale balance
 (define-read-only (get-presale-balance (account principal))
@@ -57,7 +57,7 @@
 ;; Internal - Mint NFT using Mintpass mechanism
 (define-private (mintpass-mint (new-owner principal))
   (let ((presale-balance (get-presale-balance new-owner)))
-    (asserts! (> presale-balance u0) (err ERR-NO-MINTPASS-REMAINING))
+    (asserts! (> presale-balance u0) ERR-NO-MINTPASS-REMAINING)
     (map-set presale-count
               new-owner
               (- presale-balance u1))
@@ -66,13 +66,13 @@
 ;; Internal - Mint public sale NFT
 (define-private (public-mint (new-owner principal))
   (begin
-    (asserts! (var-get sale-active) (err ERR-SALE-NOT-ACTIVE))
+    (asserts! (var-get sale-active) ERR-SALE-NOT-ACTIVE)
     (contract-call? .megapont-ape-club-nft mint new-owner)))
 
 ;; Set public sale flag
 (define-public (flip-mintpass-sale)
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER)  (err ERR-NOT-AUTHORIZED))
+    (asserts! (is-eq tx-sender CONTRACT-OWNER)  ERR-NOT-AUTHORIZED)
     ;; Disable the Public sale
     (var-set sale-active false)
     (var-set mintpass-sale-active (not (var-get mintpass-sale-active)))
@@ -81,7 +81,7 @@
 ;; Set public sale flag
 (define-public (flip-sale)
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) (err ERR-NOT-AUTHORIZED))
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     ;; Disable the Mintpass sale
     (var-set mintpass-sale-active false)
     (var-set sale-active (not (var-get sale-active)))
