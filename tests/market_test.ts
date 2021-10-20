@@ -59,7 +59,7 @@ Clarinet.test({
     let logEvent = block.receipts[3].events[2];
     assertEquals(stxEvent.stx_transfer_event.amount, "51000000");
     assertEquals(nftEvent.nft_transfer_event.recipient, wallet_1.address);
-    assertEquals(logEvent.contract_event.value, '{a: "buy-in-stx", id: u1}');
+    assertEquals(logEvent.contract_event.value, '{a: "buy-in-ustx", id: u1}');
   },
 });
 

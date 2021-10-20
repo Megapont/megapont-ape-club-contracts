@@ -60,7 +60,7 @@ export function list(
 ) {
   return Tx.contractCall(
     "megapont-ape-club-nft",
-    "list-in-stx",
+    "list-in-ustx",
     [types.uint(id), types.uint(price), types.principal(commission)],
     user.address
   );
@@ -69,7 +69,7 @@ export function list(
 export function unlist(id: number, user: Account) {
   return Tx.contractCall(
     "megapont-ape-club-nft",
-    "unlist-in-stx",
+    "unlist-in-ustx",
     [types.uint(id)],
     user.address
   );
@@ -78,7 +78,7 @@ export function unlist(id: number, user: Account) {
 export function buy(id: number, commission: string, user: Account) {
   return Tx.contractCall(
     "megapont-ape-club-nft",
-    "buy-in-stx",
+    "buy-in-ustx",
     [types.uint(id), types.principal(commission)],
     user.address
   );

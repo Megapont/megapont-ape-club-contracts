@@ -117,14 +117,14 @@
   (let ((listing  {price: price, commission: (contract-of comm)}))
     (asserts! (is-sender-owner id) ERR-NOT-AUTHORIZED)
     (map-set market id listing)
-    (print (merge listing {a: "list-in-stx", id: id}))
+    (print (merge listing {a: "list-in-ustx", id: id}))
     (ok true)))
 
 (define-public (unlist-in-ustx (id uint))
   (begin
     (asserts! (is-sender-owner id) ERR-NOT-AUTHORIZED)
     (map-delete market id)
-    (print {a: "unlist-in-stx", id: id})
+    (print {a: "unlist-in-ustx", id: id})
     (ok true)))
 
 (define-public (buy-in-ustx (id uint) (comm <commission-trait>))
@@ -136,7 +136,7 @@
     (try! (contract-call? comm pay id price))
     (try! (trnsfr id owner tx-sender))
     (map-delete market id)
-    (print {a: "buy-in-stx", id: id})
+    (print {a: "buy-in-ustx", id: id})
     (ok true)))
 
 ;; update meta data
@@ -150,7 +150,7 @@
     (ok true)))
 
 ;; Freeze metadata
-(define-public (freeze-metadata)  
+(define-public (freeze-metadata)
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (var-set metadata-frozen true)
@@ -168,6 +168,6 @@
 (define-public (set-mint-address)
   (let ((the-mint (map-get? mint-address true)))
     (asserts! (and (is-none the-mint)
-              (map-insert mint-address true tx-sender)) 
+              (map-insert mint-address true tx-sender))
                 ERR-MINT-ALREADY-SET)
     (ok tx-sender)))
