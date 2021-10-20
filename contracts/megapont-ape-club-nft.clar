@@ -110,24 +110,24 @@
   (let ((owner (unwrap! (nft-get-owner? Megapont-Ape-Club id) false)))
     (or (is-eq tx-sender owner) (is-eq contract-caller owner))))
 
-(define-read-only (get-listing-in-stx (id uint))
+(define-read-only (get-listing-in-ustx (id uint))
   (map-get? market id))
 
-(define-public (list-in-stx (id uint) (price uint) (comm <commission-trait>))
+(define-public (list-in-ustx (id uint) (price uint) (comm <commission-trait>))
   (let ((listing  {price: price, commission: (contract-of comm)}))
     (asserts! (is-sender-owner id) ERR-NOT-AUTHORIZED)
     (map-set market id listing)
     (print (merge listing {a: "list-in-stx", id: id}))
     (ok true)))
 
-(define-public (unlist-in-stx (id uint))
+(define-public (unlist-in-ustx (id uint))
   (begin
     (asserts! (is-sender-owner id) ERR-NOT-AUTHORIZED)
     (map-delete market id)
     (print {a: "unlist-in-stx", id: id})
     (ok true)))
 
-(define-public (buy-in-stx (id uint) (comm <commission-trait>))
+(define-public (buy-in-ustx (id uint) (comm <commission-trait>))
   (let ((owner (unwrap! (nft-get-owner? Megapont-Ape-Club id) ERR-NOT-FOUND))
       (listing (unwrap! (map-get? market id) ERR-LISTING))
       (price (get price listing)))
