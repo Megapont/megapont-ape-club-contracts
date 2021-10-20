@@ -110,7 +110,7 @@
   (let ((owner (unwrap! (nft-get-owner? Megapont-Ape-Club id) false)))
     (or (is-eq tx-sender owner) (is-eq contract-caller owner))))
 
-(define-read-only (get-listing (id uint))
+(define-read-only (get-listing-in-stx (id uint))
   (map-get? market id))
 
 (define-public (list-in-stx (id uint) (price uint) (comm <commission-trait>))
