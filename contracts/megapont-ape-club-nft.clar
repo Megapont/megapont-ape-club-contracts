@@ -4,7 +4,6 @@
 (impl-trait .nft-trait.nft-trait)
 (use-trait commission-trait .commission-trait.commission)
 
-;; define a new NFT. Make sure to replace Megapont-Ape-Club
 (define-non-fungible-token Megapont-Ape-Club uint)
 
 ;; Storage
@@ -23,14 +22,14 @@
 (define-constant APE-LIMIT u2500)
 
 ;; Withdraw wallets
-;; Megapont 1
-(define-constant WALLET_1 'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5)
-;; Megapont 2
-(define-constant WALLET_2 'ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG)
-;; Megapont 3
-(define-constant WALLET_3 'ST2JHG361ZXG51QTKY2NQCVBPPRRE2KZB1HR05NNC)
-;; Security Audit
-(define-constant WALLET_4 'ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND)
+;; Megapont 1 47.5%
+(define-constant WALLET_1 'SP39E0V32MC31C5XMZEN1TQ3B0PW2RQSJB8TKQEV9)
+;; Megapont 2 45%
+(define-constant WALLET_2 'SP1C39PEYB976REP9B19QMFDJHHF27A63WANDGTX4)
+;; Megapont 3 5%
+(define-constant WALLET_3 'SP11QRBEVACSP2MAYB1FE64PZGXXRWE4R3HY5E68H)
+;; Security Audit 2.5%
+(define-constant WALLET_4 'SP2J56JG0SMAVW0DXXJ7W18W2CQHD1FE83FZCFV26)
 
 ;; Define Variables
 (define-data-var last-id uint u0)
@@ -38,6 +37,7 @@
 (define-data-var metadata-frozen bool false)
 (define-data-var base-uri (string-ascii 80) "ipfs://Qmad43sssgNbG9TpC6NfeiTi9X6f9vPYuzgW2S19BEi49m/{id}")
 (define-constant contract-uri "ipfs://QmSeXmYpkaxvH3xv8ikwDodJZjp9pqxooVvqLHq3Gvg6So")
+(define-constant proof-hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 (define-map mint-address bool principal)
 
 ;; Token count for account
@@ -139,8 +139,6 @@
     (print {a: "buy-in-ustx", id: id})
     (ok true)))
 
-;; update meta data
-
 ;; Set base uri
 (define-public (set-base-uri (new-base-uri (string-ascii 80)))
   (begin
@@ -157,7 +155,6 @@
     (ok true)))
 
 ;; Manage the Mint
-
 (define-private (called-from-mint)
   (let ((the-mint
           (unwrap! (map-get? mint-address true)
